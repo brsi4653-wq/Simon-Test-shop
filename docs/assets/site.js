@@ -181,7 +181,9 @@ function bindCartButtons() {
     if (!item || !canAddToCart(item)) return;
     cart = addCartItem(cart, item);
     saveCart();
-    button.textContent = "Added";
+    button.textContent = "✓";
+    button.title = "Added to cart";
+    button.setAttribute("aria-label", "Added to cart");
   }));
 }
 

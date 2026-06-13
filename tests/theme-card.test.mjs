@@ -46,8 +46,7 @@ test("collection uses a centered stacked product deck", () => {
   assert.match(siteCss, /\.product-deck\s*\{[^}]*place-items:\s*center/s);
   assert.match(siteCss, /\.deck-card\s*\{[^}]*position:\s*absolute/s);
   assert.match(siteCss, /\.deck-card\.is-active\s*\{[^}]*clip-path:\s*inset\(0 0 0 0\)/s);
-  assert.match(siteCss, /\.deck-card\.is-previous\s*\{[^}]*clip-path:/s);
-  assert.match(siteCss, /\.deck-card\.is-next\s*\{[^}]*clip-path:/s);
+  assert.doesNotMatch(siteCss, /\.deck-card\.is-(?:previous|next)\s*\{[^}]*clip-path:/s);
   assert.doesNotMatch(siteCss, /scroll-snap-type/);
 });
 

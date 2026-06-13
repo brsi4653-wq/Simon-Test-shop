@@ -14,7 +14,7 @@ html { scroll-behavior: smooth; }
 body { margin: 0; min-height: 100vh; overflow-x: hidden; background: var(--baby-blue); color: var(--navy); font-family: var(--sans); }
 button, a, input, select, textarea { font: inherit; }
 button { color: inherit; }
-.site-header { height: 70px; padding: 0 clamp(18px, 3vw, 48px); display: flex; align-items: center; justify-content: space-between; position: fixed; inset: 0 0 auto; z-index: 50; pointer-events: none; }
+.site-header { height: 70px; padding: 0 clamp(18px, 3vw, 48px); display: flex; align-items: center; justify-content: space-between; position: fixed; inset: 0 0 auto; z-index: 50; background: var(--baby-blue); border-bottom: 1px solid var(--line); pointer-events: none; }
 .site-header > * { pointer-events: auto; }
 .brand { padding: 0; border: 0; background: transparent; cursor: pointer; }
 .brand img { display: block; width: 108px; max-height: 42px; object-fit: contain; }
@@ -34,12 +34,12 @@ nav button:hover, nav button.active { color: var(--navy); text-decoration: under
 .collection-filters button.active { color: var(--navy); border-color: var(--navy); }
 .product-deck { height: 100vh; min-height: 620px; position: relative; display: grid; place-items: center; overflow: hidden; perspective: 1600px; }
 .product-wheel { width: min(46vw, 620px); height: min(68vh, 720px); min-height: 440px; position: relative; isolation: isolate; }
-.deck-card { position: absolute; inset: 0; z-index: 0; opacity: 0; pointer-events: none; transform-origin: 50% 100%; transition: transform .55s cubic-bezier(.2,.8,.2,1), opacity .4s ease, clip-path .55s cubic-bezier(.2,.8,.2,1); }
+.deck-card { position: absolute; inset: 0; z-index: 0; opacity: 0; pointer-events: none; transform-origin: 50% 100%; transition: transform .55s cubic-bezier(.2,.8,.2,1), opacity .4s ease; }
 .deck-card.is-active { z-index: 10; opacity: 1; pointer-events: auto; transform: translate3d(0, 0, 0) scale(1); clip-path: inset(0 0 0 0); }
-.deck-card.is-previous { z-index: 5; opacity: .72; pointer-events: auto; transform: translate3d(-58%, 3%, -180px) rotate(-7deg) scale(.88); clip-path: inset(0 56% 0 0); }
-.deck-card.is-next { z-index: 6; opacity: .72; pointer-events: auto; transform: translate3d(58%, 3%, -180px) rotate(7deg) scale(.88); clip-path: inset(0 0 0 56%); }
-.deck-card.is-far-previous { transform: translate3d(-84%, 8%, -320px) scale(.76); clip-path: inset(0 78% 0 0); opacity: .2; }
-.deck-card.is-far-next { transform: translate3d(84%, 8%, -320px) scale(.76); clip-path: inset(0 0 0 78%); opacity: .2; }
+.deck-card.is-previous { z-index: 5; opacity: .68; pointer-events: auto; transform: translate3d(-24%, 3%, -180px) rotate(-5deg) scale(.91); }
+.deck-card.is-next { z-index: 6; opacity: .68; pointer-events: auto; transform: translate3d(24%, 3%, -180px) rotate(5deg) scale(.91); }
+.deck-card.is-far-previous { z-index: 2; transform: translate3d(-39%, 7%, -320px) rotate(-8deg) scale(.82); opacity: .18; }
+.deck-card.is-far-next { z-index: 3; transform: translate3d(39%, 7%, -320px) rotate(8deg) scale(.82); opacity: .18; }
 .deck-image { width: 100%; height: 100%; padding: 0; border: 1px solid var(--navy); background: var(--paper); overflow: hidden; cursor: pointer; }
 .deck-image img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .deck-number { position: absolute; top: 12px; right: 14px; color: var(--navy); font-size: 10px; font-weight: 800; letter-spacing: .14em; }
@@ -50,7 +50,7 @@ nav button:hover, nav button.active { color: var(--navy); text-decoration: under
 .active-product-copy h1 { margin: 8px 0; font-size: clamp(30px, 4vw, 60px); font-weight: 600; line-height: .9; letter-spacing: 0; }
 .active-product-copy p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
 .deck-actions { position: absolute; right: 14px; bottom: 14px; z-index: 2; display: flex; gap: 7px; }
-.icon-action { width: 40px; height: 40px; padding: 0; border: 1px solid var(--navy); border-radius: 50%; display: grid; place-items: center; background: var(--baby-blue); cursor: pointer; font-size: 16px; }
+.icon-action { width: 40px; height: 40px; flex: 0 0 40px; padding: 0; border: 1px solid var(--navy); border-radius: 50%; display: grid; place-items: center; overflow: hidden; white-space: nowrap; background: var(--baby-blue); cursor: pointer; font-size: 16px; line-height: 1; }
 .icon-action:hover { background: var(--navy); color: var(--baby-blue); }
 .empty-state { width: min(620px, calc(100vw - 40px)); padding: 70px 30px; text-align: center; border: 1px solid var(--navy); background: transparent; }
 .empty-state h2 { margin: 12px 0; font-size: clamp(38px, 6vw, 72px); letter-spacing: 0; line-height: .94; }
@@ -60,13 +60,14 @@ nav button:hover, nav button.active { color: var(--navy); text-decoration: under
 .detail-page, .cart-page { min-height: 100vh; padding: 100px clamp(18px, 5vw, 80px) 60px; }
 .detail-back { margin-bottom: 20px; }
 .detail-hero { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(330px, .85fr); gap: clamp(28px, 5vw, 80px); align-items: center; }
+.detail-copy { min-width: 0; }
 .gallery-main { min-height: min(70vh, 780px); border: 1px solid var(--navy); background: var(--paper); overflow: hidden; }
 .gallery-main img { width: 100%; height: min(70vh, 780px); object-fit: contain; display: block; }
 .gallery-strip { margin-top: 10px; display: flex; gap: 10px; overflow-x: auto; }
 .gallery-strip button { width: 100px; height: 100px; flex: 0 0 auto; padding: 4px; border: 1px solid var(--navy); background: var(--paper); cursor: pointer; }
 .gallery-strip button.active { background: var(--baby-blue-light); }
 .gallery-strip img { width: 100%; height: 100%; object-fit: contain; }
-.detail-copy h1, .cart-heading h1 { margin: 12px 0 25px; font-size: clamp(54px, 8vw, 128px); font-weight: 600; line-height: .78; letter-spacing: 0; }
+.detail-copy h1, .cart-heading h1 { margin: 12px 0 25px; font-size: clamp(48px, 6vw, 96px); font-weight: 600; line-height: .82; letter-spacing: 0; overflow-wrap: anywhere; }
 .detail-copy .summary { color: var(--navy); font-size: 20px; line-height: 1.35; }
 .detail-copy p, .cart-heading p, .cart-summary p { color: var(--muted); line-height: 1.55; }
 .price-note { display: inline-block; margin-top: 12px; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
@@ -112,8 +113,8 @@ footer a { color: inherit; }
   .collection-meta { top: 70px; left: 14px; right: 14px; }
   .product-deck { min-height: 560px; }
   .product-wheel { width: 72vw; height: 56vh; min-height: 390px; }
-  .deck-card.is-previous { transform: translate3d(-50%, 2%, -180px) rotate(-5deg) scale(.86); clip-path: inset(0 66% 0 0); }
-  .deck-card.is-next { transform: translate3d(50%, 2%, -180px) rotate(5deg) scale(.86); clip-path: inset(0 0 0 66%); }
+  .deck-card.is-previous { transform: translate3d(-18%, 2%, -180px) rotate(-4deg) scale(.9); }
+  .deck-card.is-next { transform: translate3d(18%, 2%, -180px) rotate(4deg) scale(.9); }
   .active-product-copy { left: 14px; bottom: 112px; width: 58vw; }
   .active-product-copy h1 { font-size: 32px; }
   .deck-controls { bottom: 66px; }
