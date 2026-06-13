@@ -28,28 +28,33 @@ test("product themes inherit global unless explicitly selected", () => {
 test("prototype wheel uses its own visual system instead of product theme variables", () => {
   assert.doesNotMatch(siteJs, /--card-accent:/);
   assert.doesNotMatch(siteJs, /--card-ink:/);
-  assert.match(siteCss, /\.wheel-image\s*\{[^}]*background:\s*radial-gradient/s);
+  assert.match(siteCss, /--baby-blue:\s*#b9dcf4/);
+  assert.doesNotMatch(siteCss, /gradient\(/);
 });
 
 test("prototype wheel text uses readable prototype colors", () => {
-  assert.match(siteCss, /\.wheel-copy p\s*\{[^}]*color:\s*var\(--muted\)/s);
-  assert.match(siteCss, /\.kicker\s*\{[^}]*color:\s*var\(--blue-bright\)/s);
-  assert.match(siteCss, /\.text-action\s*\{[^}]*color:\s*var\(--blue-bright\)/s);
+  assert.match(siteCss, /\.active-product-copy p\s*\{[^}]*color:\s*var\(--muted\)/s);
+  assert.match(siteCss, /\.kicker\s*\{[^}]*color:\s*var\(--muted\)/s);
+  assert.match(siteCss, /\.text-action\s*\{[^}]*color:\s*var\(--navy\)/s);
 });
 
 test("collection cards stay aligned instead of using a staggered offset", () => {
   assert.doesNotMatch(siteCss, /\.item-card:nth-child\([^)]*\)\s*\{\s*transform:\s*translateY/);
 });
 
-test("collection uses a centered horizontal product wheel", () => {
-  assert.match(siteCss, /\.product-wheel\s*\{[^}]*display:\s*flex/s);
-  assert.match(siteCss, /\.product-wheel\s*\{[^}]*scroll-snap-type:\s*x mandatory/s);
+test("collection uses a centered stacked product deck", () => {
+  assert.match(siteCss, /\.product-deck\s*\{[^}]*place-items:\s*center/s);
+  assert.match(siteCss, /\.deck-card\s*\{[^}]*position:\s*absolute/s);
+  assert.match(siteCss, /\.deck-card\.is-active\s*\{[^}]*clip-path:\s*inset\(0 0 0 0\)/s);
+  assert.match(siteCss, /\.deck-card\.is-previous\s*\{[^}]*clip-path:/s);
+  assert.match(siteCss, /\.deck-card\.is-next\s*\{[^}]*clip-path:/s);
+  assert.doesNotMatch(siteCss, /scroll-snap-type/);
 });
 
-test("collection images use a stable wheel frame and cards cannot overflow", () => {
-  assert.match(siteCss, /\.wheel-card\s*\{[^}]*min-width:\s*0/s);
-  assert.match(siteCss, /\.wheel-image\s*\{[^}]*aspect-ratio:/s);
-  assert.match(siteCss, /\.wheel-image\s*\{[^}]*overflow:\s*hidden/s);
+test("collection images use a stable deck frame and cards cannot overflow", () => {
+  assert.match(siteCss, /\.product-wheel\s*\{[^}]*position:\s*relative/s);
+  assert.match(siteCss, /\.deck-image\s*\{[^}]*width:\s*100%[^}]*height:\s*100%/s);
+  assert.match(siteCss, /\.deck-image\s*\{[^}]*overflow:\s*hidden/s);
 });
 
 test("public page version-pins the paired theme assets", () => {
@@ -94,7 +99,7 @@ test("homepage settings migration is additive and supports icon image and produc
 });
 
 test("collection wheel images show the full garment without stretching", () => {
-  assert.match(siteCss, /\.wheel-image img\s*\{[^}]*object-fit:\s*contain/s);
+  assert.match(siteCss, /\.deck-image img\s*\{[^}]*object-fit:\s*contain/s);
 });
 
 test("every theme has readable main and muted card text", () => {

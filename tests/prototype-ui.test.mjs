@@ -25,11 +25,16 @@ test("prototype keeps shared catalogue data but isolates visual settings", () =>
   assert.match(adminJs, /upsert\(\{ id: "prototype"/);
 });
 
-test("prototype uses a technical blue scroll-driven visual system", () => {
-  assert.match(siteCss, /--prototype-blue:/);
-  assert.match(siteCss, /scroll-snap-type:\s*x mandatory/);
-  assert.match(siteCss, /\.wheel-card\.is-active/);
-  assert.match(siteJs, /IntersectionObserver/);
+test("prototype uses a flat baby-blue stacked product deck", () => {
+  assert.match(siteCss, /--baby-blue:\s*#[a-f0-9]+/i);
+  assert.match(siteCss, /\.product-deck/);
+  assert.match(siteCss, /\.deck-card\.is-active/);
+  assert.match(siteCss, /\.deck-card\.is-previous/);
+  assert.match(siteCss, /\.deck-card\.is-next/);
+  assert.doesNotMatch(siteCss, /gradient\(/i);
+  assert.doesNotMatch(siteCss, /scroll-snap-type/i);
+  assert.doesNotMatch(siteJs, /IntersectionObserver/);
+  assert.match(siteJs, /stepDeckIndex/);
 });
 
 test("prototype settings patch exposes the isolated public settings row without changing garments", () => {

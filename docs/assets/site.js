@@ -2,11 +2,15 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 import { ORDER_EMAIL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "./config.js?v=20260612-purchase-email";
 import { filterItemsByCollection, getProductAction, normalizeCollections, normalizeItems, toPublicGarmentCopy } from "./item-model.js?v=20260612-featured-catalogue";
 import { addCartItem, buildCartRequestEmail, canAddToCart, cartQuantity, CART_STORAGE_KEY, normalizeCart, reconcileCart, removeCartItem, updateCartItem } from "./cart-model.js?v=20260611";
+import { deckPosition, stepDeckIndex } from "./deck-model.js?v=20260613";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 let items = [];
 let collections = [];
 let activeCollection = "featured";
+let activeDeckIndex = 0;
+let deckLocked = false;
+let touchStartX = 0;
 let cart = loadCart();
 const views = [...document.querySelectorAll(".view")];
 const navButtons = [...document.querySelectorAll("[data-view]")];
@@ -34,61 +38,74 @@ function listBlock(title, values) {
   return `<section class="option-block"><span class="kicker">${escapeHtml(title)}</span><ul>${values.map((value) => `<li>${escapeHtml(value)}</li>`).join("")}</ul></section>`;
 }
 
+function filteredItems() {
+  return filterItemsByCollection(items, activeCollection);
+}
+
 function renderFilters() {
   const filters = [{ name: "Featured", slug: "featured" }, { name: "All", slug: "all" }, ...collections];
   const container = document.getElementById("collection-filters");
   container.innerHTML = filters.map((entry) => `<button type="button" data-filter="${escapeHtml(entry.slug)}" class="${entry.slug === activeCollection ? "active" : ""}">${escapeHtml(entry.name)}</button>`).join("");
   container.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => {
     activeCollection = button.dataset.filter;
+    activeDeckIndex = 0;
     renderFilters();
     renderWheel();
   }));
 }
 
-function wheelCard(rawItem, index) {
+function deckCard(rawItem, index, itemCount) {
   const item = toPublicGarmentCopy(rawItem);
-  return `<article class="wheel-card" data-wheel-card data-index="${index}">
-    <button class="wheel-image" data-item="${escapeHtml(item.slug)}" aria-label="Open ${escapeHtml(item.title)}">
+  const position = deckPosition(index, activeDeckIndex, itemCount);
+  return `<article class="deck-card is-${position}" data-deck-card data-index="${index}">
+    <button class="deck-image" data-deck-select="${index}" aria-label="Select ${escapeHtml(item.title)}">
       ${item.main_image_url ? `<img src="${escapeHtml(item.main_image_url)}" alt="${escapeHtml(item.title)}" />` : imagePlaceholder(item.title)}
     </button>
-    <div class="wheel-copy">
-      <div>
-        <span class="kicker">${escapeHtml(item.eyebrow)}</span>
-        <h2>${escapeHtml(item.title)}</h2>
-        <p>${escapeHtml(item.summary)}</p>
-      </div>
-      <div class="wheel-actions">
-        <button class="icon-action" data-item="${escapeHtml(item.slug)}" title="View garment" aria-label="View garment">↗</button>
-        ${canAddToCart(item) ? `<button class="icon-action" data-add-cart="${escapeHtml(item.id || item.slug)}" title="Add to cart" aria-label="Add to cart">+</button>` : ""}
-      </div>
-    </div>
+    <span class="deck-number">${String(index + 1).padStart(2, "0")}</span>
+    ${position === "active" ? `<div class="deck-actions">
+      <button class="icon-action" data-item="${escapeHtml(item.slug)}" title="View garment" aria-label="View garment">&nearr;</button>
+      ${canAddToCart(item) ? `<button class="icon-action" data-add-cart="${escapeHtml(item.id || item.slug)}" title="Add to cart" aria-label="Add to cart">+</button>` : ""}
+    </div>` : ""}
   </article>`;
 }
 
 function renderWheel() {
   const wheel = document.getElementById("product-wheel");
-  const filtered = filterItemsByCollection(items, activeCollection);
+  const filtered = filteredItems();
+  if (activeDeckIndex >= filtered.length) activeDeckIndex = 0;
   wheel.innerHTML = filtered.length
-    ? filtered.map(wheelCard).join("")
+    ? filtered.map((item, index) => deckCard(item, index, filtered.length)).join("")
     : `<div class="empty-state"><span class="kicker">${activeCollection === "featured" ? "Featured rotation" : "Current collection"}</span><h2>${activeCollection === "featured" ? "No featured garments yet." : "Nothing is currently available."}</h2><p>Check back for the next SHIPS release.</p></div>`;
-  document.getElementById("wheel-position").textContent = filtered.length ? `01 / ${String(filtered.length).padStart(2, "0")}` : "00 / 00";
+  const active = filtered[activeDeckIndex] ? toPublicGarmentCopy(filtered[activeDeckIndex]) : null;
+  document.getElementById("wheel-position").textContent = active ? `${String(activeDeckIndex + 1).padStart(2, "0")} / ${String(filtered.length).padStart(2, "0")}` : "00 / 00";
+  document.getElementById("active-product-copy").innerHTML = active
+    ? `<span class="kicker">${escapeHtml(active.eyebrow)}</span><h1>${escapeHtml(active.title)}</h1><p>${escapeHtml(active.summary)}</p>`
+    : `<span class="kicker">Current collection</span><h1>No garments yet.</h1><p>Check back for the next SHIPS release.</p>`;
+  bindDeckButtons();
   bindItemButtons();
   bindCartButtons();
-  observeWheel();
 }
 
-function observeWheel() {
-  const cards = [...document.querySelectorAll("[data-wheel-card]")];
-  if (!cards.length) return;
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      cards.forEach((card) => card.classList.toggle("is-active", card === entry.target));
-      document.getElementById("wheel-position").textContent = `${String(Number(entry.target.dataset.index) + 1).padStart(2, "0")} / ${String(cards.length).padStart(2, "0")}`;
-    });
-  }, { root: document.getElementById("product-wheel"), threshold: .62 });
-  cards.forEach((card) => observer.observe(card));
-  cards[0].classList.add("is-active");
+function moveDeck(direction) {
+  const filtered = filteredItems();
+  if (filtered.length < 2 || deckLocked) return;
+  activeDeckIndex = stepDeckIndex(activeDeckIndex, direction, filtered.length);
+  deckLocked = true;
+  renderWheel();
+  setTimeout(() => { deckLocked = false; }, 430);
+}
+
+function bindDeckButtons() {
+  document.querySelectorAll("[data-deck-select]").forEach((button) => button.addEventListener("click", () => {
+    const nextIndex = Number(button.dataset.deckSelect);
+    if (nextIndex === activeDeckIndex) {
+      const item = filteredItems()[activeDeckIndex];
+      if (item) showItem(item.slug);
+      return;
+    }
+    activeDeckIndex = nextIndex;
+    renderWheel();
+  }));
 }
 
 function renderDetail(rawItem) {
@@ -99,7 +116,7 @@ function renderDetail(rawItem) {
     ? `<button class="primary-action" disabled>${escapeHtml(action.label)}</button>`
     : `<a class="primary-action" href="${escapeHtml(action.href)}">${escapeHtml(action.label)}</a>`;
   document.getElementById("item-detail").innerHTML = `<section class="detail-page">
-    <button class="text-action detail-back" data-view="collection">← Back to collection</button>
+    <button class="text-action detail-back" data-view="collection">&larr; Back to collection</button>
     <div class="detail-hero">
       <div>
         <div class="gallery-main">${images.length ? `<img id="gallery-main-image" src="${escapeHtml(images[0])}" alt="${escapeHtml(item.title)}" />` : imagePlaceholder(item.title)}</div>
@@ -145,7 +162,7 @@ function renderCart() {
         </div><button class="text-action" data-remove-cart="${escapeHtml(entry.id)}">Remove</button>
       </div>
     </article>`;
-  }).join("") : `<div class="empty-state"><span class="kicker">Cart</span><h2>No garments selected.</h2><p>Add pieces from the collection wheel.</p></div>`;
+  }).join("") : `<div class="empty-state"><span class="kicker">Cart</span><h2>No garments selected.</h2><p>Add pieces from the collection deck.</p></div>`;
   document.querySelectorAll("[data-cart-id]").forEach((entry) => entry.querySelectorAll("[data-cart-field]").forEach((field) => field.addEventListener("change", () => {
     const changes = {};
     entry.querySelectorAll("[data-cart-field]").forEach((input) => changes[input.dataset.cartField] = input.value);
@@ -164,7 +181,7 @@ function bindCartButtons() {
     if (!item || !canAddToCart(item)) return;
     cart = addCartItem(cart, item);
     saveCart();
-    button.textContent = "✓";
+    button.textContent = "Added";
   }));
 }
 
@@ -214,11 +231,21 @@ async function loadData() {
   else showView(hash || "collection");
 }
 
+document.querySelectorAll("[data-deck-step]").forEach((button) => button.addEventListener("click", () => moveDeck(Number(button.dataset.deckStep))));
 document.getElementById("product-wheel").addEventListener("wheel", (event) => {
-  if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
   event.preventDefault();
-  event.currentTarget.scrollBy({ left: event.deltaY, behavior: "smooth" });
+  moveDeck(Math.abs(event.deltaY) >= Math.abs(event.deltaX) ? event.deltaY : event.deltaX);
 }, { passive: false });
+document.getElementById("product-wheel").addEventListener("touchstart", (event) => { touchStartX = event.touches[0]?.clientX || 0; }, { passive: true });
+document.getElementById("product-wheel").addEventListener("touchend", (event) => {
+  const distance = touchStartX - (event.changedTouches[0]?.clientX || touchStartX);
+  if (Math.abs(distance) > 35) moveDeck(distance);
+}, { passive: true });
+document.addEventListener("keydown", (event) => {
+  if (!document.getElementById("collection").classList.contains("active")) return;
+  if (event.key === "ArrowLeft") moveDeck(-1);
+  if (event.key === "ArrowRight" || event.key === "ArrowDown") moveDeck(1);
+});
 document.getElementById("year").textContent = new Date().getFullYear();
 document.getElementById("clear-cart").addEventListener("click", () => { cart = []; saveCart(); });
 bindViewButtons();

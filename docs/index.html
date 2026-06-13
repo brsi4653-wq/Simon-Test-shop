@@ -7,15 +7,12 @@
     <title>SHIPS / Future Collection</title>
     <link rel="icon" href="favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" href="favicon.png" />
-    <link rel="stylesheet" href="assets/site.css?v=20260612-prototype-wheel" />
+    <link rel="stylesheet" href="assets/site.css?v=20260613-product-deck" />
   </head>
   <body>
-    <div class="ambient ambient-one"></div>
-    <div class="ambient ambient-two"></div>
-
     <header class="site-header">
       <button class="brand" data-view="collection" aria-label="Open collection">
-        <img src="images/logos/ships-main-white-display.png" alt="SHIPS" />
+        <img src="images/logos/ships-main-black-display.png" alt="SHIPS" />
       </button>
       <nav aria-label="Main navigation">
         <button data-view="collection" class="active">Collection</button>
@@ -26,18 +23,23 @@
     <main>
       <div id="collection" class="view active">
         <section class="collection-shell">
-          <div class="collection-heading">
-            <div>
-              <span class="kicker">SHIPS / Designed in Nova Scotia</span>
-              <h1>Current<br />rotation.</h1>
-            </div>
-            <p>Scroll through selected garments and releases. Open a piece for details, availability, and ordering.</p>
+          <div class="collection-meta">
+            <span class="kicker">Designed in Nova Scotia</span>
+            <span id="wheel-position">00 / 00</span>
           </div>
           <nav id="collection-filters" class="collection-filters" aria-label="Filter the collection"></nav>
-          <section class="product-wheel" id="product-wheel" aria-label="Products"></section>
-          <div class="wheel-status">
-            <span id="wheel-position">00 / 00</span>
-            <span>Scroll to explore</span>
+          <section class="product-deck" aria-label="Products">
+            <div class="product-wheel" id="product-wheel"></div>
+            <div class="deck-controls" aria-label="Product navigation">
+              <button type="button" data-deck-step="-1" aria-label="Previous garment">&larr;</button>
+              <span>Scroll / swipe</span>
+              <button type="button" data-deck-step="1" aria-label="Next garment">&rarr;</button>
+            </div>
+          </section>
+          <div class="active-product-copy" id="active-product-copy">
+            <span class="kicker">Current selection</span>
+            <h1>Select a garment</h1>
+            <p>Scroll once to move through the collection.</p>
           </div>
         </section>
       </div>
@@ -71,6 +73,6 @@
       <a href="admin.html">Private editor</a>
     </footer>
 
-    <script type="module" src="assets/site.js?v=20260612-prototype-wheel"></script>
+    <script type="module" src="assets/site.js?v=20260613-product-deck"></script>
   </body>
 </html>
